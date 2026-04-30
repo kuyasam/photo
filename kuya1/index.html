@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Church Photo Booth - 주님과 네컷</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        .photo-strip {
+            width: 320px;
+            background: white;
+            padding: 15px;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            position: relative;
+        }
+
+        /* 캐릭터 애니메이션 - 부드러운 움직임 */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-5px) scale(1.05); }
+        }
+
+        .jesus-overlay {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 75px;
+            height: 75px;
+            pointer-events: none;
+            z-index: 20;
+            animation: bounce 2s infinite ease-in-out;
+        }
+
+        .flash {
+            animation: flash-anim 0.5s ease-out;
+        }
+
+        @keyframes flash-anim {
+            0% { background: white; opacity: 1; }
+            100% { background: transparent; opacity: 0; }
+        }
+
+        /* 사진 필터 효과 */
+        .filter-none { filter: none; }
+        .filter-grayscale { filter: grayscale(100%); }
+        .filter-warm { filter: sepia(0.2) saturate(1.4) brightness(1.1); }
+        .filter-cool { filter: contrast(1.1) brightness(1.1) hue-rotate(10deg); }
+        .filter-vintage { filter: contrast(0.8) sepia(0.3) hue-rotate(-15deg); }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- 촬영 시 플래시 효과 -->
+    <div id="flash-effect" class="fixed inset-0 z-50 pointer-events-none opacity-0"></div>
+
+    <div class="max-w-5xl w-full flex flex-col md:flex-row gap-10 items-start">
+        
+        <!-- 왼쪽: 카메라 및 컨트롤러 -->
+        <div class="flex-1 w-full space-y-6">
+            <header class="text-center md:text-left">
+                <div class="inline-block bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full mb-2 uppercase tracking-wider">Church Event Special</div>
+                <h1 class="text-4xl font-black text-slate-800 tracking-tight">📸 주님과 네컷</h1>
+                <p class="text-slate-500 mt-1 italic">"항상 기뻐하라" (살전 5:16) — 주님과 함께 찰칵!</p>
+            </header>
+
+            <!-- 카메라 뷰어 -->
+            <div class="relative aspect-[3/4] bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border-[12px] border-white">
+                <video id="video" autoplay playsinline class="w-full h-full object-cover scale-x-[-1] filter-none"></video>
+                
+                <!-- 카운트다운 숫자 -->
+                <div id="countdown" class="absolute inset-0 flex items-center justify-center text-white text-9xl font-bold hidden select-none drop-shadow-2xl">
+                    3
+                </div>
+
+                <!-- 안내 메시지 -->
+                <div id="camera-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-800">
+                    <i data-lucide="camera" class="w-16 h-16 mb-4 animate-pulse"></i>
+                    <p class="font-medium">카메라 권한을 확인해주세요.</p>
+                </div>
+            </div>
+
+            <!-- 설정 패널 -->
+            <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 space-y-8">
+                <!-- 필터 선택 -->
+                <div class="space-y-3">
+                    <label class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-blue-500"></i> 필터 선택
+                    </label>
+                    <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                        <button onclick="setFilter('none')" class="flex-shrink-0 px-5 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-blue-600 hover:text-white transition-all">원본</button>
+                        <button onclick="setFilter('grayscale')" class="flex-shrink-0 px-5 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-blue-600 hover:text-white transition-all">흑백</button>
+                        <button onclick="setFilter('warm')" class="flex-shrink-0 px-5 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-blue-600 hover:text-white transition-all">따뜻하게</button>
+                        <button onclick="setFilter('cool')" class="flex-shrink-0 px-5 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-blue-600 hover:text-white transition-all">청량하게</button>
+                        <button onclick="setFilter('vintage')" class="flex-shrink-0 px-5 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-blue-600 hover:text-white transition-all">빈티지</button>
+                    </div>
+                </div>
+
+                <!-- 프레임 색상 -->
+                <div class="space-y-3">
+                    <label class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                        <i data-lucide="palette" class="w-4 h-4 text-blue-500"></i> 프레임 색상
+                    </label>
+                    <div class="flex gap-4">
+                        <button onclick="setFrameColor('white')" class="w-10 h-10 rounded-full border-2 border-slate-200 bg-white shadow-sm hover:scale-110 transition-transform"></button>
+                        <button onclick="setFrameColor('#1e293b')" class="w-10 h-10 rounded-full border-2 border-slate-200 bg-slate-800 shadow-sm hover:scale-110 transition-transform"></button>
+                        <button onclick="setFrameColor('#fee2e2')" class="w-10 h-10 rounded-full border-2 border-slate-200 bg-red-100 shadow-sm hover:scale-110 transition-transform"></button>
+                        <button onclick="setFrameColor('#e0f2fe')" class="w-10 h-10 rounded-full border-2 border-slate-200 bg-blue-100 shadow-sm hover:scale-110 transition-transform"></button>
+                    </div>
+                </div>
+
+                <!-- 촬영 버튼 -->
+                <button id="start-btn" onclick="startCaptureProcess()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-200 transition-all transform active:scale-95 flex items-center justify-center gap-3 text-lg">
+                    <i data-lucide="play" class="w-6 h-6"></i>
+                    사진 촬영 시작!
+                </button>
+            </div>
+        </div>
+
+        <!-- 오른쪽: 결과물 미리보기 -->
+        <div class="w-full md:w-auto flex flex-col items-center">
+            <h2 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-[0.2em]">Result Strip</h2>
+            
+            <div id="capture-container" class="photo-strip rounded-sm transition-all duration-500">
+                <div id="photos-grid" class="space-y-3">
+                    <!-- 촬영 전 플레이스홀더 -->
+                    <div class="aspect-[4/3] bg-slate-50 rounded-sm flex items-center justify-center text-slate-200 border border-slate-100">
+                        <i data-lucide="image" class="w-10 h-10 opacity-20"></i>
+                    </div>
+                    <div class="aspect-[4/3] bg-slate-50 rounded-sm flex items-center justify-center text-slate-200 border border-slate-100">
+                        <i data-lucide="image" class="w-10 h-10 opacity-20"></i>
+                    </div>
+                    <div class="aspect-[4/3] bg-slate-50 rounded-sm flex items-center justify-center text-slate-200 border border-slate-100">
+                        <i data-lucide="image" class="w-10 h-10 opacity-20"></i>
+                    </div>
+                    <div class="aspect-[4/3] bg-slate-50 rounded-sm flex items-center justify-center text-slate-200 border border-slate-100">
+                        <i data-lucide="image" class="w-10 h-10 opacity-20"></i>
+                    </div>
+                </div>
+                <div class="mt-8 text-center border-t border-slate-50 pt-5 pb-2">
+                    <p id="frame-text" class="text-slate-400 font-bold text-2xl tracking-widest italic">주님과 네컷</p>
+                    <div class="flex items-center justify-center gap-1 mt-2">
+                        <span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                        <p class="text-[10px] text-slate-300 uppercase font-bold tracking-tighter">OUR PRECIOUS BIBLE MOMENT</p>
+                        <span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex flex-col w-full md:w-80 gap-3">
+                <button id="download-btn" onclick="downloadImage()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-2xl opacity-50 cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg" disabled>
+                    <i data-lucide="download-cloud" class="w-5 h-5"></i>
+                    이미지 저장하기
+                </button>
+                <button onclick="resetBooth()" class="text-slate-400 text-sm font-medium hover:text-blue-500 transition-colors">새로고침 (다시 찍기)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 숨겨진 요소들 -->
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        const video = document.getElementById('video');
+        const countdownEl = document.getElementById('countdown');
+        const startBtn = document.getElementById('start-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const photosGrid = document.getElementById('photos-grid');
+        const captureContainer = document.getElementById('capture-container');
+        const flashEffect = document.getElementById('flash-effect');
+        
+        let currentFilter = 'none';
+        let isCapturing = false;
+
+        // 아이콘 경로 설정 (목사님께서 저장하실 파일명으로 지정)
+        // 만약 확장자가 다르면 아래 '.png' 부분을 '.jpg' 등으로 수정하시면 됩니다.
+        const JESUS_ICON_PATH = 'jicon.png';
+
+        lucide.createIcons();
+
+        // 카메라 시작
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: "user",
+                        width: { ideal: 1280 },
+                        height: { ideal: 960 } 
+                    } 
+                });
+                video.srcObject = stream;
+                document.getElementById('camera-placeholder').classList.add('hidden');
+            } catch (err) {
+                console.error("Camera error:", err);
+                alert("카메라를 사용할 수 없습니다. 브라우저 설정에서 카메라 권한을 허용해주세요.");
+            }
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            video.className = `w-full h-full object-cover scale-x-[-1] filter-${filter}`;
+        }
+
+        function setFrameColor(color) {
+            captureContainer.style.backgroundColor = color;
+            const frameText = document.getElementById('frame-text');
+            // 어두운 배경일 때 글자색 변경
+            const isDark = (color === '#1e293b');
+            frameText.style.color = isDark ? '#ffffff' : '#94a3b8';
+        }
+
+        async function startCaptureProcess() {
+            if (isCapturing) return;
+            isCapturing = true;
+            startBtn.disabled = true;
+            startBtn.classList.add('opacity-50');
+            photosGrid.innerHTML = ''; // 기존 사진 삭제
+
+            for (let i = 0; i < 4; i++) {
+                await startCountdown(3);
+                await capturePhoto();
+                await sleep(500);
+            }
+
+            isCapturing = false;
+            startBtn.disabled = false;
+            startBtn.classList.remove('opacity-50');
+            downloadBtn.disabled = false;
+            downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        function startCountdown(seconds) {
+            return new Promise((resolve) => {
+                let counter = seconds;
+                countdownEl.classList.remove('hidden');
+                countdownEl.innerText = counter;
+
+                const timer = setInterval(() => {
+                    counter--;
+                    if (counter <= 0) {
+                        clearInterval(timer);
+                        countdownEl.classList.add('hidden');
+                        resolve();
+                    } else {
+                        countdownEl.innerText = counter;
+                    }
+                }, 1000);
+            });
+        }
+
+        function capturePhoto() {
+            return new Promise((resolve) => {
+                const canvas = document.getElementById('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                // 좌우 반전 및 필터 적용
+                context.save();
+                context.scale(-1, 1);
+                context.translate(-canvas.width, 0);
+                
+                if (currentFilter === 'grayscale') context.filter = 'grayscale(100%)';
+                if (currentFilter === 'warm') context.filter = 'sepia(0.2) saturate(1.4) brightness(1.1)';
+                if (currentFilter === 'cool') context.filter = 'contrast(1.1) brightness(1.1) hue-rotate(10deg)';
+                if (currentFilter === 'vintage') context.filter = 'contrast(0.8) sepia(0.3) hue-rotate(-15deg)';
+                
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                context.restore();
+
+                const dataUrl = canvas.toDataURL('image/png');
+                displayCapturedPhoto(dataUrl);
+                
+                // 플래시 효과
+                flashEffect.classList.add('flash', 'bg-white', 'opacity-100');
+                setTimeout(() => flashEffect.classList.remove('flash', 'bg-white', 'opacity-100'), 500);
+
+                resolve();
+            });
+        }
+
+        function displayCapturedPhoto(url) {
+            const imgContainer = document.createElement('div');
+            imgContainer.className = "relative aspect-[4/3] bg-slate-100 rounded-sm overflow-hidden shadow-inner border border-slate-200/30";
+            
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = "w-full h-full object-cover";
+            
+            // 예수님 아이콘 레이어 (폴더 내 jicon.png 참조)
+            const iconDiv = document.createElement('div');
+            iconDiv.className = "jesus-overlay";
+            iconDiv.innerHTML = `<img src="${JESUS_ICON_PATH}" class="w-full h-full object-contain" onerror="this.style.display='none';">`;
+
+            imgContainer.appendChild(img);
+            imgContainer.appendChild(iconDiv);
+            photosGrid.appendChild(imgContainer);
+        }
+
+        function downloadImage() {
+            html2canvas(captureContainer, {
+                scale: 4, 
+                backgroundColor: null,
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `주님과네컷_${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        function resetBooth() {
+            if (confirm('사진을 모두 지우고 다시 촬영하시겠습니까?')) {
+                location.reload();
+            }
+        }
+
+        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        window.onload = initCamera;
+    </script>
+</body>
+</html>
