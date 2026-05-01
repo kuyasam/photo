@@ -122,6 +122,10 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        /* 셀카 모드(전면)일 때만 좌우 반전 */
+        video.user-mode {
             transform: scaleX(-1);
         }
 
@@ -179,7 +183,7 @@
             </div>
 
             <div class="camera-container w-full">
-                <video id="webcam" autoplay playsinline class="preview-filter-none"></video>
+                <video id="webcam" autoplay playsinline class="preview-filter-none user-mode"></video>
                 <div id="timer" class="timer-overlay">3</div>
                 <canvas id="tempCanvas" class="hidden"></canvas>
             </div>
@@ -189,6 +193,10 @@
                     <button id="startBtn" class="flex-1 max-w-[240px] bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 md:px-12 md:py-5 rounded-2xl md:rounded-3xl font-black text-lg md:text-2xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 md:gap-4">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="md:w-8 md:h-8" fill="currentColor" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A15.94,15.94,0,0,0,153.28,28H102.72a15.94,15.94,0,0,0-13.37,7.56L75.72,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,44h55.44l13.62,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"></path></svg>
                         <span>촬영 시작</span>
+                    </button>
+                    <!-- 카메라 전환 버튼 추가 -->
+                    <button id="switchCameraBtn" class="bg-blue-100 hover:bg-blue-200 text-blue-900 px-4 py-4 md:px-6 md:py-5 rounded-2xl md:rounded-3xl font-bold transition-all flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 256 256"><path d="M240,112a8,8,0,0,1-8,8H208v24a72.08,72.08,0,0,1-72,72,71.14,71.14,0,0,1-37.49-10.61,8,8,0,0,1,8.38-13.64A55.43,55.43,0,0,0,136,200a56.06,56.06,0,0,0,56-56V120H160a8,8,0,0,1-5.66-13.66l40-40a8,8,0,0,1,11.32,0l40,40A8,8,0,0,1,240,112ZM120,56A56.06,56.06,0,0,0,64,112v24h32a8,8,0,0,1,5.66,13.66l-40,40a8,8,0,0,1-11.32,0l-40-40A8,8,0,0,1,16,136H48V112a72.08,72.08,0,0,1,72-72,71.14,71.14,0,0,1,37.49,10.61,8,8,0,0,1-8.38,13.64A55.43,55.43,0,0,0,120,56Z"></path></svg>
                     </button>
                     <button id="resetBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-5 py-4 md:px-8 md:py-5 rounded-2xl md:rounded-3xl font-bold transition-all text-sm md:text-base">초기화</button>
                 </div>
@@ -243,6 +251,7 @@
         const video = document.getElementById('webcam');
         const startBtn = document.getElementById('startBtn');
         const resetBtn = document.getElementById('resetBtn');
+        const switchCameraBtn = document.getElementById('switchCameraBtn');
         const timerOverlay = document.getElementById('timer');
         const statusMsg = document.getElementById('statusMsg');
         const tempCanvas = document.getElementById('tempCanvas');
@@ -253,25 +262,37 @@
         let stream = null;
         let captureCount = 0;
         let currentFilter = 'none';
+        let currentFacingMode = 'user'; // 'user' (전면), 'environment' (후면)
 
         function setFilter(filterName) {
             currentFilter = filterName;
-            video.className = `preview-filter-${filterName}`;
+            video.className = `preview-filter-${filterName} ${currentFacingMode === 'user' ? 'user-mode' : ''}`;
             showToast(`필터 적용: ${filterName}`);
         }
 
         async function initCamera() {
+            // 기존 스트림이 있다면 중지 (카메라 전환 시 필수)
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+
             try {
-                // 모바일에서 전면 카메라 우선 사용
                 const constraints = { 
                     video: { 
                         width: { ideal: 1280 }, 
                         height: { ideal: 720 }, 
-                        facingMode: "user" 
+                        facingMode: currentFacingMode 
                     } 
                 };
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
+                
+                // 전면 모드일 때만 반전 클래스 추가
+                if (currentFacingMode === 'user') {
+                    video.classList.add('user-mode');
+                } else {
+                    video.classList.remove('user-mode');
+                }
             } catch (err) {
                 console.error(err);
                 statusMsg.innerText = "카메라를 시작할 수 없습니다. 권한을 확인해주세요.";
@@ -279,6 +300,13 @@
         }
 
         window.onload = initCamera;
+
+        // 카메라 전환 이벤트
+        switchCameraBtn.addEventListener('click', () => {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            initCamera();
+            showToast(currentFacingMode === 'user' ? "전면 카메라로 전환" : "후면 카메라로 전환");
+        });
 
         function showToast(msg) {
             messageBox.innerText = msg;
@@ -310,8 +338,12 @@
                         else if (currentFilter === 'bright') context.filter = 'brightness(1.15) contrast(1.1)';
                         else context.filter = 'none';
 
-                        context.translate(tempCanvas.width, 0);
-                        context.scale(-1, 1);
+                        // 촬영 시 좌우 반전 처리 (전면 카메라일 때만)
+                        if (currentFacingMode === 'user') {
+                            context.translate(tempCanvas.width, 0);
+                            context.scale(-1, 1);
+                        }
+                        
                         context.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
                         
                         const dataUrl = tempCanvas.toDataURL('image/png');
@@ -329,6 +361,7 @@
             }
             startBtn.disabled = true;
             startBtn.classList.add('opacity-50');
+            switchCameraBtn.disabled = true; // 촬영 중엔 전환 금지
             
             for (let i = 0; i < 4; i++) {
                 statusMsg.innerText = `${i + 1}/4 촬영 준비...`;
@@ -338,6 +371,7 @@
             statusMsg.innerText = "멋진 네컷이 완성되었습니다!";
             startBtn.disabled = false;
             startBtn.classList.remove('opacity-50');
+            switchCameraBtn.disabled = false;
             showToast("촬영이 완료되었습니다!");
         });
 
@@ -358,7 +392,6 @@
             }
             showToast("이미지 파일 생성 중...");
             
-            // html2canvas 설정: scale을 높여 고해상도 저장
             html2canvas(captureArea, {
                 useCORS: true,
                 scale: 3, 
