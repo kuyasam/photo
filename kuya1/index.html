@@ -53,10 +53,10 @@
         }
 
         .strip-header p {
-            font-size: 0.65rem;
-            font-weight: 400;
-            opacity: 0.8;
-            letter-spacing: 0.1em;
+            font-size: 0.75rem;
+            font-weight: 500;
+            opacity: 0.9;
+            letter-spacing: 0.05em;
         }
 
         /* 사진 그리드 */
@@ -143,16 +143,18 @@
             }
         }
 
+        /* 카메라 컨테이너 비율 2:3 */
         .camera-container {
             position: relative;
             width: 100%;
-            max-width: 640px;
-            aspect-ratio: 4 / 3;
+            max-width: 400px;
+            aspect-ratio: 2 / 3;
             background-color: #000;
             border-radius: 16px;
             overflow: hidden;
             border: 4px solid white;
             box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            margin: 0 auto;
         }
 
         @media (min-width: 768px) {
@@ -185,6 +187,12 @@
             z-index: 100;
         }
 
+        @media (min-width: 768px) {
+            .timer-overlay {
+                font-size: 7rem;
+            }
+        }
+
         /* 필터 효과 클래스 */
         .preview-filter-none { filter: none; }
         .preview-filter-grayscale { filter: grayscale(1); }
@@ -197,8 +205,8 @@
 
     <!-- Web Header (UI Only) -->
     <div class="text-center mb-8 md:mb-10 w-full max-w-3xl">
-        <h1 class="text-3xl md:text-5xl font-black text-blue-900 mb-2 tracking-tight">소요리문답 네컷</h1>
-        <p class="text-blue-600 font-bold text-sm md:text-base italic">"Shorter Catechism 4-Cuts"</p>
+        <h1 class="text-3xl md:text-5xl font-black text-blue-900 mb-2 tracking-tight text-center">소요리문답 네컷</h1>
+        <p class="text-blue-600 font-bold text-sm md:text-base italic text-center">"GM 청소년 소요리문답 스쿨"</p>
     </div>
 
     <div class="flex flex-col lg:flex-row gap-8 md:gap-12 items-center lg:items-start justify-center w-full max-w-7xl">
@@ -213,7 +221,7 @@
                 <button onclick="setFilter('bright')" class="bg-white border-2 border-blue-100 px-3 py-1.5 md:px-5 md:py-2 rounded-xl text-xs md:text-sm font-black text-blue-900 hover:border-blue-600 transition-all shadow-sm">뽀샤시</button>
             </div>
 
-            <div class="camera-container w-full">
+            <div class="camera-container">
                 <video id="webcam" autoplay playsinline class="preview-filter-none user-mode"></video>
                 <div id="timer" class="timer-overlay">3</div>
                 <canvas id="tempCanvas" class="hidden"></canvas>
@@ -230,7 +238,7 @@
                     </button>
                     <button id="resetBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-5 py-4 md:px-8 md:py-5 rounded-2xl md:rounded-3xl font-bold transition-all text-sm md:text-base">초기화</button>
                 </div>
-                <p id="statusMsg" class="text-blue-600 font-black h-6 md:h-8 text-base md:text-xl"></p>
+                <p id="statusMsg" class="text-blue-600 font-black h-6 md:h-8 text-base md:text-xl text-center"></p>
             </div>
         </div>
 
@@ -240,7 +248,7 @@
                 <!-- Header in Strip -->
                 <div class="strip-header">
                     <h2>소요리문답 네컷</h2>
-                    <p>GM SHORTER CATECHISM SCHOOL</p>
+                    <p>GM 청소년 소요리문답 스쿨</p>
                 </div>
 
                 <div class="photo-grid">
@@ -271,8 +279,8 @@
                 </div>
 
                 <!-- Footer in Strip (SC Q1/A1) -->
-                <div class="strip-footer">
-                    <p class="catechism-text">
+                <div class="strip-footer text-center">
+                    <p class="catechism-text text-center">
                         <b>Q.</b> 사람의 제일 되는 목적은 무엇입니까?<br>
                         <b>A.</b> 하나님을 영화롭게 하는 것과 영원토록 그를 즐거워하는 것입니다.
                     </p>
