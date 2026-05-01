@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>소요리문답 네컷 - GM 청소년</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -12,19 +12,29 @@
         body {
             font-family: 'Noto Sans KR', sans-serif;
             background-color: #f0f4f8;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* 프리미엄 블루 테마 프레임 */
+        /* 프리미엄 블루 테마 프레임 - 모바일 대응 */
         .photo-strip {
-            width: 320px;
+            width: 300px; /* 모바일에서 안전한 너비 */
             background-color: #1e3a8a; /* 딥 블루 */
-            padding: 18px;
+            padding: 16px;
             box-shadow: 0 25px 50px -12px rgba(30, 58, 138, 0.5);
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
             border-radius: 2px;
             position: relative;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .photo-strip {
+                width: 320px;
+                padding: 18px;
+                gap: 14px;
+            }
         }
 
         .frame-container {
@@ -36,28 +46,44 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* [수정] 왼쪽 상단 주제 아이콘 (1.png ~ 4.png) */
+        /* 왼쪽 상단 주제 아이콘 (1.png ~ 4.png) */
         .theme-icon {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 55px; /* 아이콘 크기 조절 */
+            top: 8px;
+            left: 8px;
+            width: 45px;
             height: auto;
             z-index: 25;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
             pointer-events: none;
         }
 
-        /* [기존 유지] 오른쪽 하단 예수님 아이콘 (jicon.png) */
+        @media (min-width: 768px) {
+            .theme-icon {
+                top: 10px;
+                left: 10px;
+                width: 55px;
+            }
+        }
+
+        /* 오른쪽 하단 예수님 아이콘 (jicon.png) */
         .frame-jesus-icon {
             position: absolute;
-            bottom: 8px;
-            right: 8px;
-            width: 50px;
+            bottom: 6px;
+            right: 6px;
+            width: 40px;
             height: auto;
             z-index: 20;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
             pointer-events: none;
+        }
+
+        @media (min-width: 768px) {
+            .frame-jesus-icon {
+                bottom: 8px;
+                right: 8px;
+                width: 50px;
+            }
         }
 
         .captured-img {
@@ -68,8 +94,8 @@
 
         .strip-footer {
             text-align: center;
-            margin-top: 10px;
-            padding-bottom: 8px;
+            margin-top: 8px;
+            padding-bottom: 6px;
             color: white;
         }
 
@@ -79,10 +105,17 @@
             max-width: 640px;
             aspect-ratio: 3 / 2;
             background-color: #000;
-            border-radius: 24px;
+            border-radius: 16px;
             overflow: hidden;
-            border: 10px solid white;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border: 4px solid white;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        @media (min-width: 768px) {
+            .camera-container {
+                border-radius: 24px;
+                border: 10px solid white;
+            }
         }
 
         video {
@@ -97,15 +130,21 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 7rem;
+            font-size: 5rem;
             color: white;
             font-weight: 900;
-            text-shadow: 0 0 40px rgba(0,0,0,0.6);
+            text-shadow: 0 0 30px rgba(0,0,0,0.6);
             display: none;
             z-index: 100;
         }
 
-        /* 필터 효과 클래스 */
+        @media (min-width: 768px) {
+            .timer-overlay {
+                font-size: 7rem;
+            }
+        }
+
+        /* 필터 효과 미리보기용 클래스 */
         .preview-filter-none { filter: none; }
         .preview-filter-grayscale { filter: grayscale(1); }
         .preview-filter-sepia { filter: sepia(0.6) contrast(1.1); }
@@ -113,50 +152,52 @@
         .preview-filter-bright { filter: brightness(1.15) contrast(1.1); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center py-16 px-4">
+<body class="min-h-screen flex flex-col items-center py-8 md:py-16 px-4">
 
     <!-- Header -->
-    <div class="text-center mb-12 max-w-3xl">
-        <h1 class="text-5xl font-black text-blue-900 mb-6 tracking-tight text-center">소요리문답 네컷</h1>
-        <div class="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-r-lg shadow-sm">
-            <p class="text-lg text-blue-800 font-bold italic text-center">
-                "사람의 제일 되는 목적은 하나님을 영화롭게 하는 것과<br>영원토록 그를 즐거워하는 것입니다."
+    <div class="text-center mb-8 md:mb-12 w-full max-w-3xl">
+        <h1 class="text-3xl md:text-5xl font-black text-blue-900 mb-4 md:mb-6 tracking-tight">소요리문답 네컷</h1>
+        <div class="bg-blue-50 border-l-4 border-blue-600 p-3 md:p-4 rounded-r-lg shadow-sm mx-auto">
+            <p class="text-sm md:text-lg text-blue-800 font-bold italic">
+                "사람의 제일 되는 목적은 하나님을 영화롭게 하는 것과<br class="hidden md:block">영원토록 그를 즐거워하는 것입니다."
             </p>
         </div>
     </div>
 
-    <div class="flex flex-col lg:flex-row gap-16 items-start justify-center w-full max-w-6xl">
+    <div class="flex flex-col lg:flex-row gap-8 md:gap-16 items-center lg:items-start justify-center w-full max-w-6xl">
         
         <!-- Left Side: Camera & Controls -->
-        <div class="flex-1 flex flex-col items-center gap-8 w-full">
-            <div class="flex flex-wrap justify-center gap-3">
-                <button onclick="setFilter('none')" class="bg-white border-2 border-blue-200 px-5 py-2 rounded-xl text-sm font-black text-blue-900 hover:border-blue-600 transition-all shadow-sm">기본</button>
-                <button onclick="setFilter('grayscale')" class="bg-white border-2 border-blue-200 px-5 py-2 rounded-xl text-sm font-black text-blue-900 hover:border-blue-600 transition-all shadow-sm">흑백감성</button>
-                <button onclick="setFilter('sepia')" class="bg-white border-2 border-blue-200 px-5 py-2 rounded-xl text-sm font-black text-blue-900 hover:border-blue-600 transition-all shadow-sm">빈티지</button>
-                <button onclick="setFilter('warm')" class="bg-white border-2 border-blue-200 px-5 py-2 rounded-xl text-sm font-black text-blue-900 hover:border-blue-600 transition-all shadow-sm">따뜻함</button>
-                <button onclick="setFilter('bright')" class="bg-white border-2 border-blue-200 px-5 py-2 rounded-xl text-sm font-black text-blue-900 hover:border-blue-600 transition-all shadow-sm">뽀샤시</button>
+        <div class="flex-1 flex flex-col items-center gap-6 md:gap-8 w-full">
+            
+            <!-- Filter Options (반응형 정렬) -->
+            <div class="flex flex-wrap justify-center gap-2 md:gap-3 w-full">
+                <button onclick="setFilter('none')" class="bg-white border-2 border-blue-100 px-3 py-1.5 md:px-5 md:py-2 rounded-xl text-xs md:text-sm font-black text-blue-900 hover:border-blue-600 transition-all shadow-sm">기본</button>
+                <button onclick="setFilter('grayscale')" class="bg-white border-2 border-blue-100 px-3 py-1.5 md:px-5 md:py-2 rounded-xl text-xs md:text-sm font-black text-blue-900 hover:border-blue-600 transition-all shadow-sm">흑백</button>
+                <button onclick="setFilter('sepia')" class="bg-white border-2 border-blue-100 px-3 py-1.5 md:px-5 md:py-2 rounded-xl text-xs md:text-sm font-black text-blue-900 hover:border-blue-600 transition-all shadow-sm">빈티지</button>
+                <button onclick="setFilter('warm')" class="bg-white border-2 border-blue-100 px-3 py-1.5 md:px-5 md:py-2 rounded-xl text-xs md:text-sm font-black text-blue-900 hover:border-blue-600 transition-all shadow-sm">따뜻함</button>
+                <button onclick="setFilter('bright')" class="bg-white border-2 border-blue-100 px-3 py-1.5 md:px-5 md:py-2 rounded-xl text-xs md:text-sm font-black text-blue-900 hover:border-blue-600 transition-all shadow-sm">뽀샤시</button>
             </div>
 
-            <div class="camera-container">
+            <div class="camera-container w-full">
                 <video id="webcam" autoplay playsinline class="preview-filter-none"></video>
                 <div id="timer" class="timer-overlay">3</div>
                 <canvas id="tempCanvas" class="hidden"></canvas>
             </div>
             
-            <div class="flex flex-col items-center gap-5">
-                <div class="flex gap-4">
-                    <button id="startBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-3xl font-black text-2xl transition-all shadow-2xl hover:scale-105 flex items-center gap-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A15.94,15.94,0,0,0,153.28,28H102.72a15.94,15.94,0,0,0-13.37,7.56L75.72,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,44h55.44l13.62,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"></path></svg>
-                        촬영 시작
+            <div class="flex flex-col items-center gap-4 md:gap-5 w-full">
+                <div class="flex flex-row gap-3 md:gap-4 w-full justify-center">
+                    <button id="startBtn" class="flex-1 max-w-[240px] bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 md:px-12 md:py-5 rounded-2xl md:rounded-3xl font-black text-lg md:text-2xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 md:gap-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="md:w-8 md:h-8" fill="currentColor" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A15.94,15.94,0,0,0,153.28,28H102.72a15.94,15.94,0,0,0-13.37,7.56L75.72,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,44h55.44l13.62,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"></path></svg>
+                        <span>촬영 시작</span>
                     </button>
-                    <button id="resetBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-8 py-5 rounded-3xl font-bold transition-all">초기화</button>
+                    <button id="resetBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-5 py-4 md:px-8 md:py-5 rounded-2xl md:rounded-3xl font-bold transition-all text-sm md:text-base">초기화</button>
                 </div>
-                <p id="statusMsg" class="text-blue-600 font-black h-8 text-xl"></p>
+                <p id="statusMsg" class="text-blue-600 font-black h-6 md:h-8 text-base md:text-xl"></p>
             </div>
         </div>
 
         <!-- Right Side: The Strip -->
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center w-full lg:w-auto">
             <div id="captureArea" class="photo-strip">
                 <!-- Frame 1 -->
                 <div class="frame-container">
@@ -184,19 +225,19 @@
                 </div>
 
                 <div class="strip-footer">
-                    <h2 class="text-2xl font-black tracking-tight leading-none mb-1 text-center">소요리문답 네컷</h2>
-                    <p class="text-[10px] text-blue-200 font-bold uppercase tracking-[0.25em] text-center">GM 청소년 소요리문답 스쿨</p>
+                    <h2 class="text-xl md:text-2xl font-black tracking-tight leading-none mb-1 text-center">소요리문답 네컷</h2>
+                    <p class="text-[9px] md:text-[10px] text-blue-200 font-bold uppercase tracking-[0.25em] text-center">GM 청소년 소요리문답 스쿨</p>
                 </div>
             </div>
             
-            <button id="downloadBtn" class="mt-8 bg-blue-900 text-white hover:bg-blue-800 transition-all px-10 py-4 rounded-full flex items-center gap-2 text-base font-bold shadow-xl">
+            <button id="downloadBtn" class="mt-6 md:mt-8 bg-blue-900 text-white hover:bg-blue-800 transition-all px-8 py-3 md:px-10 md:py-4 rounded-full flex items-center gap-2 text-sm md:text-base font-bold shadow-xl active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                 네컷 이미지 저장하기
             </button>
         </div>
     </div>
 
-    <div id="messageBox" class="fixed top-10 left-1/2 transform -translate-x-1/2 bg-blue-900 text-white px-10 py-5 rounded-full shadow-2xl opacity-0 transition-all duration-500 pointer-events-none z-[200] font-black text-lg">메시지</div>
+    <div id="messageBox" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-blue-900 text-white px-6 py-3 md:px-10 md:py-5 rounded-full shadow-2xl opacity-0 transition-all duration-500 pointer-events-none z-[200] font-black text-sm md:text-lg">메시지</div>
 
     <script>
         const video = document.getElementById('webcam');
@@ -221,12 +262,19 @@
 
         async function initCamera() {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { width: 1280, height: 720, facingMode: "user" } 
-                });
+                // 모바일에서 전면 카메라 우선 사용
+                const constraints = { 
+                    video: { 
+                        width: { ideal: 1280 }, 
+                        height: { ideal: 720 }, 
+                        facingMode: "user" 
+                    } 
+                };
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
             } catch (err) {
-                statusMsg.innerText = "카메라를 시작할 수 없습니다.";
+                console.error(err);
+                statusMsg.innerText = "카메라를 시작할 수 없습니다. 권한을 확인해주세요.";
             }
         }
 
@@ -280,13 +328,16 @@
                 resetPhotos();
             }
             startBtn.disabled = true;
+            startBtn.classList.add('opacity-50');
+            
             for (let i = 0; i < 4; i++) {
-                statusMsg.innerText = `${i + 1}/4 촬영 중...`;
+                statusMsg.innerText = `${i + 1}/4 촬영 준비...`;
                 await takePhoto(i);
                 captureCount++;
             }
-            statusMsg.innerText = "촬영 완료!";
+            statusMsg.innerText = "멋진 네컷이 완성되었습니다!";
             startBtn.disabled = false;
+            startBtn.classList.remove('opacity-50');
             showToast("촬영이 완료되었습니다!");
         });
 
@@ -305,8 +356,9 @@
                 showToast("사진 4장을 모두 촬영해주세요.");
                 return;
             }
-            showToast("이미지 저장 중...");
+            showToast("이미지 파일 생성 중...");
             
+            // html2canvas 설정: scale을 높여 고해상도 저장
             html2canvas(captureArea, {
                 useCORS: true,
                 scale: 3, 
@@ -314,10 +366,13 @@
                 logging: false
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `ShorterCatechism_${new Date().getTime()}.png`;
+                link.download = `Catechism_Photo_${new Date().getTime()}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
                 showToast("저장되었습니다!");
+            }).catch(err => {
+                console.error(err);
+                showToast("저장에 실패했습니다. 화면을 캡처해 주세요.");
             });
         });
     </script>
